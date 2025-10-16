@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Demon Slayer - SQL Hashira Challenge v2.0</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Kaisei+Tokumin:wght@700&family=Noto+Sans+JP&display=swap');
+
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      color: #f8f0e3;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 25px;
+      text-align: center;
+    }
+    h1 {
+      font-family: 'Kaisei Tokumin', serif;
+      font-size: 2.8em;
+      color: #ff6b6b;
+      text-shadow: 0 0 10px rgba(255, 107, 107, 0.7);
+      margin: 10px 0;
+    }
+    .subtitle {
+      color: #ffd166;
+      margin-bottom: 20px;
+      font-size: 1.2em;
+    }
+    .stats {
+      display: flex;
+      justify-content: space-around;
+      background: rgba(0,0,0,0.4);
+      padding: 12px;
+      border-radius: 10px;
+      margin: 15px 0;
+      font-weight: bold;
+    }
+    .level-box {
+      background: rgba(30, 20, 20, 0.85);
+      padding: 25px;
+      margin: 20px 0;
+      border-radius: 15px;
+      border: 2px solid #ff6b6b;
+      box-shadow: 0 0 15px rgba(255, 107, 107, 0.4);
+      text-align: left;
+    }
+    .level-title {
+      color: #ff9e6d;
+      font-size: 1.6em;
+      margin-bottom: 10px;
+    }
+    textarea {
+      width: 100%;
+      height: 90px;
+      padding: 12px;
+      font-family: 'Courier New', monospace;
+      font-size: 16px;
+      background: #1e1e1e;
+      color: #f8f8f2;
+      border: 2px solid #4ecdc4;
+      border-radius: 8px;
+      margin: 12px 0;
+      resize: vertical;
+    }
+    button {
+      background: #ff6b6b;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin: 10px 5px;
+      transition: all 0.3s;
+    }
+    button:hover {
+      background: #ff5252;
+      transform: scale(1.05);
+    }
+    .feedback {
+      min-height: 28px;
+      margin: 12px 0;
+      font-weight: bold;
+    }
+    .correct { color: #06d6a0; }
+    .incorrect { color: #ef476f; }
+    .hint {
+      color: #118ab2;
+      font-style: italic;
+      margin-top: 8px;
+      display: none;
+    }
+    .breaths {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin: 15px 0;
+      font-size: 22px;
+    }
+    .final {
+      font-size: 32px;
+      color: #ffd166;
+      animation: glow 2s infinite alternate;
+      margin: 30px 0;
+    }
+    @keyframes glow {
+      from { text-shadow: 0 0 10px #ff9e6d; }
+      to { text-shadow: 0 0 25px #ff6b6b, 0 0 35px #ff6b6b; }
+    }
+    .hidden { display: none; }
+    .timer {
+      font-size: 1.3em;
+      color: #ffd166;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+    .controls {
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>⚔️ Demon Slayer: SQL Hashira Challenge v2.0</h1>
+    <p class="subtitle">Kuasai 10 perintah SQL untuk mengalahkan Upper Moon & Muzan!</p>
+
+    <div class="stats">
+      <div>💫 Nafas: <span id="breathCount">0</span>/10</div>
+      <div>⏱️ Waktu: <span id="timeLeft">60</span>s</div>
+      <div>⭐ Skor: <span id="score">0</span></div>
+    </div>
+
+    <div class="breaths" id="breathDisplay"></div>
+
+    <div id="quiz"></div>
+
+    <div class="controls">
+      <button onclick="toggleSound()">🔊 Suara: <span id="soundStatus">ON</span></button>
+      <button onclick="resetGame()">↺ Main Ulang</button>
+    </div>
+
+    <div id="finalMessage" class="final hidden">
+      🏆 KAU MENJADI KOLUMNEL HASHIRA! 🏆<br>
+      Muzan hancur oleh Hinokami Kagura + SQL Mastery! 🔥
+    </div>
+  </div>
+
+  <audio id="correctSound" src="data:audio/mpeg;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZwBURU5DAAAAHQAAA1N3aXRjaCBQbHVzIMKpIE5DSCBTb2Z0d2FyZQBUSVQyAAAABgAAAzIyMzUAVFNTRQAAAA8AAANMYXZmNTcuODMuMTAwAAAAAAAAAAAAAAD/80DEAAAAA0gAAAAATEFNRTMuMTAwVVVVVVVVVVVVVUxBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zQsRbAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zQMSkAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV" preload="auto"></audio>
+  <audio id="incorrectSound" src="data:audio/mpeg;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZwBURU5DAAAAHQAAA1N3aXRjaCBQbHVzIMKpIE5DSCBTb2Z0d2FyZQBUSVQyAAAABgAAAzIyMzUAVFNTRQAAAA8AAANMYXZmNTcuODMuMTAwAAAAAAAAAAAAAAD/80DEAAAAA0gAAAAATEFNRTMuMTAwVVVVVVVVVVVVVUxBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zQsRbAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zQMSkAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV" preload="auto"></audio>
+
+  <script>
+    // Level dasar + lanjutan
+    const levels = [
+      { cmd: "CREATE", title: "Nafas 1: CREATE", story: "Buat tabel `slayers` dengan kolom: id (INTEGER PRIMARY KEY), nama (TEXT), rank (TEXT).", answer: "CREATE TABLE slayers (id INTEGER PRIMARY KEY, nama TEXT, rank TEXT);", hint: "Gunakan CREATE TABLE ..." },
+      { cmd: "ALTER", title: "Nafas 2: ALTER", story: "Tambahkan kolom `umur` (INTEGER) ke tabel `slayers`.", answer: "ALTER TABLE slayers ADD COLUMN umur INTEGER;", hint: "ALTER TABLE ... ADD COLUMN ..." },
+      { cmd: "DROP", title: "Nafas 3: DROP", story: "Hapus tabel `iblis_lemah`.", answer: "DROP TABLE iblis_lemah;", hint: "DROP TABLE [nama];" },
+      { cmd: "INSERT", title: "Nafas 4: INSERT", story: "Masukkan Tanjiro: id=1, nama='Tanjiro Kamado', rank='Mizunoto', umur=15.", answer: "INSERT INTO slayers (id, nama, rank, umur) VALUES (1, 'Tanjiro Kamado', 'Mizunoto', 15);", hint: "INSERT INTO ... VALUES ..." },
+      { cmd: "SELECT", title: "Nafas 5: SELECT", story: "Tampilkan semua slayer berusia < 18.", answer: "SELECT * FROM slayers WHERE umur < 18;", hint: "SELECT * FROM ... WHERE ..." },
+      { cmd: "UPDATE", title: "Nafas 6: UPDATE", story: "Ubah rank Tanjiro menjadi 'Kanoe'.", answer: "UPDATE slayers SET rank = 'Kanoe' WHERE nama = 'Tanjiro Kamado';", hint: "UPDATE ... SET ... WHERE ..." },
+      { cmd: "DELETE", title: "Nafas 7: DELETE", story: "Hapus 'Slayer Pengkhianat'.", answer: "DELETE FROM slayers WHERE nama = 'Slayer Pengkhianat';", hint: "DELETE FROM ... WHERE ..." },
+      { cmd: "JOIN", title: "Nafas 8: JOIN", story: "Tampilkan nama slayer dan nama iblis yang mereka kalahkan (gabung tabel `slayers` dan `kemenangan`).", answer: "SELECT slayers.nama, kemenangan.iblis FROM slayers JOIN kemenangan ON slayers.id = kemenangan.slayer_id;", hint: "Gunakan JOIN ON ..." },
+      { cmd: "GROUP BY", title: "Nafas 9: GROUP BY", story: "Hitung jumlah kemenangan tiap slayer.", answer: "SELECT slayer_id, COUNT(*) FROM kemenangan GROUP BY slayer_id;", hint: "SELECT ..., COUNT(*) FROM ... GROUP BY ..." },
+      { cmd: "ORDER BY", title: "Nafas 10: ORDER BY", story: "Tampilkan slayer termuda lebih dulu.", answer: "SELECT * FROM slayers ORDER BY umur ASC;", hint: "SELECT * FROM ... ORDER BY ... ASC/DESC" }
+    ];
+
+    let breaths = 0;
+    let currentLevel = 0;
+    let score = 0;
+    let timeLeft = 60;
+    let timer;
+    let soundEnabled = true;
+
+    function normalize(sql) {
+      return sql
+        .replace(/;/g, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .toLowerCase()
+        .replace(/"/g, "'"); // handle quote style
+    }
+
+    function startTimer() {
+      clearInterval(timer);
+      timeLeft = 60;
+      document.getElementById('timeLeft').textContent = timeLeft;
+      timer = setInterval(() => {
+        timeLeft--;
+        document.getElementById('timeLeft').textContent = timeLeft;
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          document.getElementById('feedback').className = "feedback incorrect";
+          document.getElementById('feedback').textContent = "⏰ Waktu habis! Coba lagi.";
+          showHint();
+        }
+      }, 1000);
+    }
+
+    function showLevel() {
+      if (currentLevel >= levels.length) return;
+      
+      startTimer();
+      const level = levels[currentLevel];
+      document.getElementById('quiz').innerHTML = `
+        <div class="level-box">
+          <div class="level-title">🌸 ${level.title}</div>
+          <p>${level.story}</p>
+          <textarea id="userInput" placeholder="Tulis perintah SQL-mu..."></textarea>
+          <div class="timer">Sisa Waktu: <span id="timeDisplay">60</span> detik</div>
+          <button onclick="checkAnswer()">Periksa Jawaban</button>
+          <div class="feedback" id="feedback"></div>
+          <div class="hint" id="hint">${level.hint}</div>
+        </div>
+      `;
+      document.getElementById('timeDisplay').textContent = timeLeft;
+    }
+
+    function checkAnswer() {
+      if (timeLeft <= 0) return;
+      
+      clearInterval(timer);
+      const input = document.getElementById('userInput').value;
+      const feedback = document.getElementById('feedback');
+      const correct = normalize(input) === normalize(levels[currentLevel].answer);
+
+      if (soundEnabled) {
+        const audio = document.getElementById(correct ? 'correctSound' : 'incorrectSound');
+        audio.currentTime = 0;
+        audio.play().catch(e => console.log("Audio gagal: ", e));
+      }
+
+      if (correct) {
+        const timeBonus = Math.max(10, timeLeft * 2); // minimal 10 poin
+        score += timeBonus;
+        breaths++;
+        updateUI();
+        feedback.className = "feedback correct";
+        feedback.textContent = `✅ Benar! +${timeBonus} poin. ${getEncouragement()}`;
+        
+        setTimeout(() => {
+          currentLevel++;
+          if (currentLevel < levels.length) {
+            showLevel();
+          } else {
+            endGame();
+          }
+        }, 1800);
+      } else {
+        feedback.className = "feedback incorrect";
+        feedback.textContent = "❌ Salah! Coba lagi.";
+        showHint();
+      }
+    }
+
+    function showHint() {
+      document.getElementById('hint').style.display = "block";
+    }
+
+    function getEncouragement() {
+      const msgs = [
+        "Fondasi pasukan tercipta!",
+        "Struktur diperkuat!",
+        "Kelemahan dihapus!",
+        "Semangat Tanjiro tercatat!",
+        "Potensi muda terlihat!",
+        "Pertumbuhan diakui!",
+        "Pengkhianat dibersihkan!",
+        "Kau menghubungkan takdir slayer dan iblis!",
+        "Kemenangan dihitung dengan presisi!",
+        "Urutan kekuatan terungkap!"
+      ];
+      return msgs[currentLevel] || "";
+    }
+
+    function updateUI() {
+      document.getElementById('breathCount').textContent = breaths;
+      document.getElementById('score').textContent = score;
+      updateBreaths();
+    }
+
+    function updateBreaths() {
+      const display = document.getElementById('breathDisplay');
+      display.innerHTML = '';
+      for (let i = 0; i < breaths; i++) {
+        const span = document.createElement('span');
+        span.textContent = '💫';
+        display.appendChild(span);
+      }
+    }
+
+    function endGame() {
+      document.getElementById('quiz').innerHTML = '';
+      document.getElementById('finalMessage').classList.remove('hidden');
+    }
+
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      document.getElementById('soundStatus').textContent = soundEnabled ? "ON" : "OFF";
+    }
+
+    function resetGame() {
+      breaths = 0;
+      currentLevel = 0;
+      score = 0;
+      clearInterval(timer);
+      document.getElementById('finalMessage').classList.add('hidden');
+      updateUI();
+      showLevel();
+    }
+
+    // Mulai game
+    updateUI();
+    showLevel();
+  </script>
+</body>
+</html>
